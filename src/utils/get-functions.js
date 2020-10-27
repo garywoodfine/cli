@@ -1,43 +1,28 @@
-const fs = require('fs')
-const path = require('path')
+const { listFunctions } = require('@netlify/zip-it-and-ship-it')
 
-const { findModuleDir, findHandler } = require('./finders')
+const { fileExistsAsync } = require('../lib/fs')
+
+// List all Netlify Functions
+const getFunctions = async function (functionsSrcDir) {
+  if (!(await fileExistsAsync(functionsSrcDir))) {
+    return []
+  }
+
+  const functions = await listFunctions(functionsSrcDir)
+  const functionsWithProps = functions.map(addFunctionProps)
+  return functionsWithProps
+}
+
+const addFunctionProps = function ({ name }) {
+  const localPath = getLocalFunctionPath(name)
+  const isBackground = name.endsWith(BACKGROUND)
+  return { name, localPath, isBackground }
+}
+
+const getLocalFunctionPath = function (functionName) {
+  return `/.netlify/functions/${functionName}`
+}
 
 const BACKGROUND = '-background'
 
-const isBackground = (functionPath) => {
-  const filename = path.basename(functionPath, path.extname(functionPath))
-  return filename.endsWith(BACKGROUND)
-}
-
-module.exports = {
-  getFunctions(dir) {
-    const functions = {}
-    if (fs.existsSync(dir)) {
-      fs.readdirSync(dir).forEach((file) => {
-        if (dir === 'node_modules') {
-          return
-        }
-        const functionPath = path.resolve(path.join(dir, file))
-        const handlerPath = findHandler(functionPath)
-        if (!handlerPath) {
-          return
-        }
-        if (path.extname(functionPath) === '.js') {
-          functions[file.replace(/\.js$/, '')] = {
-            functionPath,
-            moduleDir: findModuleDir(functionPath),
-            isBackground: isBackground(functionPath),
-          }
-        } else if (fs.lstatSync(functionPath).isDirectory()) {
-          functions[file] = {
-            functionPath: handlerPath,
-            moduleDir: findModuleDir(functionPath),
-            isBackground: isBackground(handlerPath),
-          }
-        }
-      })
-    }
-    return functions
-  },
-}
+module.exports = { getFunctions }

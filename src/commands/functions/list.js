@@ -56,24 +56,19 @@ class FunctionsListCommand extends Command {
       process.exit(1)
     }
 
-    const functions = getFunctions(functionsDir)
-    const functionData = Object.entries(functions)
+    const functions = await getFunctions(functionsDir)
 
-    if (functionData.length === 0) {
+    if (functions.length === 0) {
       this.log(`No functions found in ${functionsDir}`)
       this.exit()
     }
 
     if (flags.json) {
-      const jsonData = functionData.map(([functionName, { moduleDir }]) => {
-        const isDeployed = deployedFunctions.map((deployedFunction) => deployedFunction.n).includes(functionName)
-        return {
-          name: functionName,
-          url: `/.netlify/functions/${functionName}`,
-          moduleDir,
-          isDeployed,
-        }
-      })
+      const jsonData = functions.map(({ name, localPath }) => ({
+        name,
+        url: localPath,
+        isDeployed: isDeployedFunction(deployedFunctions, name),
+      }))
       this.logJson(jsonData)
       this.exit()
     }
@@ -81,13 +76,21 @@ class FunctionsListCommand extends Command {
     // Make table
     this.log(`Based on local functions folder ${functionsDir}, these are the functions detected`)
     const table = new AsciiTable(`Netlify Functions (in local functions folder)`)
-    table.setHeading('Name', 'Url', 'moduleDir', 'deployed')
-    functionData.forEach(([functionName, { moduleDir }]) => {
-      const isDeployed = deployedFunctions.map((deployedFunction) => deployedFunction.n).includes(functionName)
-      table.addRow(functionName, `/.netlify/functions/${functionName}`, moduleDir, isDeployed ? 'yes' : 'no')
+    table.setHeading('Name', 'Url', 'deployed')
+    functions.forEach(({ name, localPath }) => {
+      addFunctionRow({ table, deployedFunctions, functionName: name, localPath })
     })
     this.log(table.toString())
   }
+}
+
+const addFunctionRow = function ({ table, deployedFunctions, functionName, localPath }) {
+  const isDeployed = isDeployedFunction(deployedFunctions, functionName)
+  table.addRow(functionName, localPath, isDeployed ? 'yes' : 'no')
+}
+
+const isDeployedFunction = function (deployedFunctions, functionName) {
+  return deployedFunctions.some((deployedFunction) => deployedFunction.n === functionName)
 }
 
 FunctionsListCommand.description = `List functions that exist locally
