@@ -19,6 +19,8 @@ module.exports = {
     'import/max-dependencies': 0,
     'node/no-sync': 0,
 
+    'promise/always-return': 2,
+
     // TODO: harmonize with filename snake_case in other Netlify Dev projects
     'unicorn/filename-case': [2, { case: 'kebabCase', ignore: ['.*.md'] }],
   },
