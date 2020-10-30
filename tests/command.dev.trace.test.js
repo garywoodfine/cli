@@ -1,3 +1,5 @@
+'use strict'
+
 const test = require('ava')
 
 const { installTrafficMesh } = require('../src/utils/traffic-mesh')

@@ -1,3 +1,5 @@
+'use strict'
+
 // dotenv loading similar to create-react-app / react-scripts or dotenv-load
 const path = require('path')
 const process = require('process')

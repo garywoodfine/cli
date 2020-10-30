@@ -1,3 +1,5 @@
+'use strict'
+
 const fromEntries = require('@ungap/from-entries')
 const chalk = require('chalk')
 const execa = require('execa')

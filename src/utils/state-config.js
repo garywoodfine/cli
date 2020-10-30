@@ -1,3 +1,5 @@
+'use strict'
+
 const fs = require('fs')
 const path = require('path')
 const process = require('process')
@@ -78,10 +80,11 @@ class StateConfig {
     return dotProp.get(this.all, key)
   }
 
-  set(key, val) {
+  set(...args) {
+    const [key, val] = args
     const config = this.all
 
-    if (arguments.length === 1) {
+    if (args.length === 1) {
       for (const keyPart of Object.keys(key)) {
         dotProp.set(config, keyPart, key[keyPart])
       }
